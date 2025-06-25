@@ -97,10 +97,10 @@ older_sis_dist <- function(U, F){
   pi <- pi_mix(U, F)
   IC <- rep(0, om)
   IC1 <- daughter_dist(U, F)
-  for( i in 1 : n){
-    IC <- IC + pi[i]*IC1[,i]
+  for( i in 1 : (n)){
+    IC <- IC + pi[(i)]*U_tilde%*%IC1[,(i)]
   }
-  X[,1] <- U_tilde %*% IC
+  X[,1] <-  IC
   for(i in 1 : (n -1) ){
     X[,i+1] <- U_tilde%*%X[,i]
   }
@@ -181,7 +181,7 @@ older_aunts_dist <- function(U,F){
   for(i in 1 : n){
     IC <- IC + pi[i]*IC1[,i]
   }
-  X[,1] <- U_tilde %*% IC
+  X[,1] <- IC
   for(i in 1 : (n -1) ){
     X[,i+1] <- U_tilde %*% X[,i]
   }
@@ -201,8 +201,8 @@ younger_aunts_dist <- function(U,F){
   pi <- pi_mix(U,F)
   IC <- rep(0, om )
   IC1 <-  younger_sis_dist(U,F)
-  for(i in 1 : (n-1)){
-    IC <- IC + pi[(i)]*( IC1[,(i+1)])
+  for(i in 1 : (n)){
+    IC <- IC + pi[(i)]*( IC1[,(i)])
   }
   subsidy_vec <-  grand_mother_dist(U,F)
   X[,1] <-  IC
@@ -226,8 +226,8 @@ older_cousins_dist <- function(U,F){
   pi <- pi_mix(U,F)
   IC <- rep(0, om )
   IC1 <- older_nieces_dist(U,F)
-  for(i in 1 : (n-1)){
-    IC <- IC + pi[i]*IC1[,(i+1)]
+  for(i in 1 : (n)){
+    IC <- IC + pi[i]*IC1[,(i)]
   }
   subsidy_vec <- older_aunts_dist(U,F)
   X[,1] <- IC

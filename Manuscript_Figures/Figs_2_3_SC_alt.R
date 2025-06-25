@@ -1,7 +1,7 @@
 library(ggplot2)
 library(dplyr)
 
-fig_out <- here::here("Revisions_Figures/Figures")
+fig_out <- here::here("Manuscript_Figures/Figures")
 
 # load in rates
 
@@ -14,7 +14,7 @@ f_int <- which(mothers_age(u_mat,f_mat)>0)%>%length()
 ### Younger sisters
 df_list_ys <- list()
 for(i in 0:19){
-  df <- Matrix_func_age_YS(20, i, u_mat, f_mat, 7)
+  df <- ys_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -24,7 +24,7 @@ df_list_ys_20 <- do.call("rbind", df_list_ys) %>% as.data.frame()
 ### Older sisters
 df_list_os <- list()
 for(i in 21:(21+f_int+1)){
-  df <- Matrix_func_age_OS(20, i, u_mat, f_mat, 7)
+  df <- os_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -51,7 +51,7 @@ dat_20_sis <- joe_sis_20 %>% dplyr::mutate(xint = 20)
 ### Younger sisters
 df_list_ys <- list()
 for(i in 0:49){
-  df <- Matrix_func_age_YS(50, i, u_mat, f_mat, 7)
+  df <- ys_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -61,7 +61,7 @@ df_list_ys_50 <- do.call("rbind", df_list_ys) %>% as.data.frame()
 ### Older sisters
 df_list_os <- list()
 for(i in 51:(51+f_int+1)){
-  df <- Matrix_func_age_OS(50, i, u_mat, f_mat, 7)
+  df <- os_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -84,13 +84,13 @@ joe_sis_50 <- rbind(df_list_ys_50, df_list_os_50) %>%
                 age_Focal = "At 50 years",
                 kin = "Sisters")
 dat_50_sis <- joe_sis_50 %>% dplyr::mutate(xint = 50)
-
+dat_50_sis
 ######## Aunts #######################################################################################################
 ############################################# Age-specific dists of kin when Focal is 20 ##############################
 ### Younger cousins
 df_list_cya_20 <- list()
 for(i in 0:60){
-  df <- CYA_dist_quick(20, i, u_mat, f_mat, 7)
+  df <- cya_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -101,7 +101,7 @@ df_list_cya_20 <- do.call("rbind", df_list_cya_20) %>% as.data.frame()
 ### Older cousins
 df_list_coa_20 <- list()
 for(i in 0:80){
-  df <- COA_dist_quick(20, i, u_mat, f_mat, 7)
+  df <- coa_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -109,6 +109,15 @@ for(i in 0:80){
 }
 df_list_coa_20 <- do.call("rbind", df_list_coa_20) %>% as.data.frame()
 
+df_list_coa_20 %>%
+  mutate(X = prob*number,
+         X2 = prob*number^2) %>%
+  group_by(age) %>%
+  summarise(mean = sum(X),
+            s2 = sum(X2),
+            sd = (s2 - mean^2)^(0.5)) %>%
+  ungroup() %>% ggplot(aes(x = age)) +
+  geom_point(aes(y = mean)) + geom_errorbar(aes(ymin = ifelse(mean - sd<0,0,mean-sd), ymax = mean+sd))
 ################################################################################
 
 joe_cousin_20 <- data.frame()
@@ -141,7 +150,7 @@ dat_20_cousin <- joe_cousin_20 %>% dplyr::mutate(xint = 20)
 ### Cousins from younger aunts
 df_list_cya_50 <- list()
 for(i in 0:100){
-  df <- CYA_dist_quick(50, i, u_mat, f_mat, 7)
+  df <- cya_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -151,7 +160,7 @@ df_list_cya_50 <- do.call("rbind", df_list_cya_50) %>% as.data.frame()
 ### Cousins from older aunts
 df_list_coa_50 <- list()
 for(i in 0:100){
-  df <- COA_dist_quick(50, i, u_mat, f_mat, 7)
+  df <- coa_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -397,7 +406,7 @@ pdf_sis_plot <- pdf_sibs_sim %>%
   ylim(c(0,1))
 
 pdf_sis_plot
-ggsave(paste0(fig_out,"/PDF_sis_cousins.png"), pdf_sis_plot, width = 9, height = 7)
+#ggsave(paste0(fig_out,"/PDF_sis_cousins.png"), pdf_sis_plot, width = 9, height = 7)
 
 rbind(acc_20_sis,acc_50_sis,acc_20_aunts,acc_50_aunts) %>% filter(age_Focal == "At 20 years")
 
@@ -412,7 +421,7 @@ pdf_sibs_sim %>% dplyr::filter(kin == "Cousins", age_Focal == "At 50 years") %>%
 
 mean(a20)
 sd(a20)
-0.7573915^(0.5)
+0.7199918^(0.5)
 
 pdf_sibs_sim %>% filter(number == 0)
 pdf_sibs_sim$sd <- pdf_sibs_sim$variance^(0.5)

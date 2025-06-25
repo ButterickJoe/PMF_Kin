@@ -90,7 +90,7 @@ df_hal_YS_50 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_ys <- list() # PMF kin
 for(i in 0:49){
-  df <- Matrix_func_age_YS(50, i, u_mat, f_mat, 7)
+  df <- ys_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -127,7 +127,7 @@ df_hal_OS_50 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_os <- list() # PMF Kin
 for(i in 51:(51+f_int+1)){
-  df <- Matrix_func_age_OS(50, i, u_mat, f_mat, 7)
+  df <- os_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -165,7 +165,7 @@ df_hal_YA_50 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_ya_50 <- list() # PMF Kin
 for(i in 45:100){
-  df <- Matrix_func_age_YA_CALC(50, i, u_mat, f_mat, 7)
+  df <- ya_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -192,7 +192,6 @@ ya50 <- rbind(df_joe_YA_50, df_hal_YA_50) %>%
   ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
   geom_point() + theme_bw() + theme(legend.position = "top")
 ya50
-## Note that this result reproduces Caswell and is dependent on shifting gran's age at mother by -1 time-steps
 ggsave(paste0(fig_out,"younger_aunt_F_50.png"), ya50)
 
 ### Older aunts (Focal at 50)
@@ -203,7 +202,7 @@ df_hal_OA_50 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_oa_50 <- list()
 for(i in 65:100){
-  df <- Matrix_func_age_OA(50, i, u_mat, f_mat, 7)
+  df <- oa_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -267,8 +266,6 @@ df_joe_YC_20 <- df_list_cya_20 %>%
 yc_20 <- rbind(df_joe_YC_20, df_hal_YC_20) %>%
   ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
   geom_point() + theme_bw() + theme(legend.position = "top")
-
-## Note again that we adjust our model to the assumptions of Caswell (2019)
 ggsave(paste0(fig_out,"younger_cousin_F_20.png"), yc_20)
 
 ### Older cousins (Focal at 20)
@@ -279,7 +276,7 @@ df_hal_OC_20 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_coa_20 <- list() # PMF Kin
 for(i in 0:80){
-  df <- COA_dist_quick(20, i, u_mat, f_mat, 7)
+  df <- coa_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i

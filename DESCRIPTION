@@ -17,4 +17,6 @@ Imports:
     future.apply,
     ggplot2,
     gsignal,
-    magrittr
+    magrittr,
+    parallel,
+    sf
