@@ -17,6 +17,8 @@ coa_PMF <- function(y, s2, U_mat, F_mat, Q){
   probable_ages_of_mothering <- sapply(1:ncol(F_mat), function(x) mothers_age(U_mat, F_mat, x))
   # Actual ages of mothering (non-zero probability)
   actual_ages_of_mothering <- which(probable_ages_of_mothering != 0) - 1
+  ## make a list of possible age-specific pmf reproduction matrices for to save computing each time in the lapply below
+  #Q_dists <- lapply(actual_ages_of_mothering, function(x){Q_matrix(x, Q, F_mat)})
   # All possible combinations of mother and grandmother ages in matrix form (rows repeated)
   combinations <- expand.grid(a = actual_ages_of_mothering, b = actual_ages_of_mothering)
   rho_probs <- matrix(diag(outer(probable_ages_of_mothering[(combinations$a+1)], probable_ages_of_mothering[(combinations$b+1)], "*")), nrow = 1)
@@ -44,6 +46,7 @@ coa_PMF <- function(y, s2, U_mat, F_mat, Q){
     OA_pdf_project <- (rho_probs_mat * dist_mat_gran) %*% rep(1, ncol(dist_mat_gran))
     # Distribution of newborn cousins to aunt at age "OA_age_COA"
     Q_mat_OA_COA <- Q_matrix(OA_age_COA, Q, F_mat)
+    #Q_mat_OA_COA <- Q_dists[[(OA_age_COA+1-actual_ages_of_mothering[1])]]
     newborn_COA <- Q_mat_OA_COA %*% OA_pdf_project
     # Distribution of cousins after U_suv_CYA
     suv_COA <- U_suv_COA %*% newborn_COA
