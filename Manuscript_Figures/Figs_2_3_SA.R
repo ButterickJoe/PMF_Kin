@@ -14,10 +14,7 @@ f_int <- which(mothers_age(u_mat,f_mat)>0)%>%length()
 ### Younger sisters
 df_list_ys <- list()
 for(i in 0:19){
-  ## We can either choose the data frame method (slower -- average )
-  #df <- unconditional_mothers_age_YS(40, i, u_mat, f_mat, 7)
-  ## or the matrix method (faster but less easy to interpret)
-  df <- Matrix_func_age_YS(20, i, u_mat, f_mat, 7)
+  df <- ys_pmf(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -27,8 +24,7 @@ df_list_ys_20 <- do.call("rbind", df_list_ys) %>% as.data.frame()
 ### Older sisters
 df_list_os <- list()
 for(i in 21:(21+f_int+1)){
-  #df <- unconditional_mothers_age_OS(40, i, u_mat, f_mat, 7)
-  df <- Matrix_func_age_OS(20, i, u_mat, f_mat, 7)
+  df <- os_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -55,7 +51,7 @@ dat_20 <- joe_sis_20 %>% dplyr::mutate(xint = 20)
 ### Younger sisters
 df_list_ys <- list()
 for(i in 0:49){
-  df <- Matrix_func_age_YS(50, i, u_mat, f_mat, 7)
+  df <- ys_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -65,8 +61,7 @@ df_list_ys_50 <- do.call("rbind", df_list_ys) %>% as.data.frame()
 ### Older sisters
 df_list_os <- list()
 for(i in 51:(51+f_int+1)){
-  #df <- unconditional_mothers_age_OS(40, i, u_mat, f_mat, 7)
-  df <- Matrix_func_age_OS(50, i, u_mat, f_mat, 7)
+  df <- os_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -97,7 +92,7 @@ Matrix_func_age_YA(20, 60, u_mat, f_mat, 7)
 ### Younger aunts
 df_list_ya_20 <- list()
 for(i in 10:80){
-  df <- Matrix_func_age_YA(20, i, u_mat, f_mat, 7)
+  df <- ya_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -125,7 +120,7 @@ df_list_ya_20 %>%
 ### Older aunts
 df_list_oa_20 <- list()
 for(i in 33:100){
-  df <- Matrix_func_age_OA(20, i, u_mat, f_mat, 7)
+  df <- oa_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -182,7 +177,7 @@ dat_20_aunt <- joe_aunt_20 %>% dplyr::mutate(xint = 20)
 ### Younger aunts
 df_list_ya_50 <- list()
 for(i in 45:100){
-  df <- Matrix_func_age_YA_CALC(50, i, u_mat, f_mat, 7)
+  df <- ya_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -192,7 +187,7 @@ df_list_ya_50 <- do.call("rbind", df_list_ya_50) %>% as.data.frame()
 ### Older aunts
 df_list_oa_50 <- list()
 for(i in 65:100){
-  df <- Matrix_func_age_OA(50, i, u_mat, f_mat, 7)
+  df <- oa_PMF(50, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
