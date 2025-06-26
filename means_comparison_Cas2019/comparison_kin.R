@@ -112,6 +112,7 @@ df_joe_YS_50 <- df_list_ys_50 %>%
   dplyr::transmute(age_kin = age,
                    expectation = mean,
                    method = "PFM")
+library(ggplot2)
 ## visual
 ys50 <- rbind(df_joe_YS_50, df_hal_YS_50) %>%
   ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
@@ -240,7 +241,7 @@ df_hal_YC_20 <- data.frame(age_kin = 0:100,
                            method = "Hal")
 df_list_cya_20 <- list() # PMF Kin
 for(i in 0:60){
-  df <- CYA_dist_quick(20, i, u_mat, f_mat, 7)
+  df <- cya_PMF(20, i, u_mat, f_mat, 7)
   df1 <- data.frame(number = seq(0,6))
   df1$prob <- df
   df1$age <- i
@@ -267,7 +268,7 @@ yc_20 <- rbind(df_joe_YC_20, df_hal_YC_20) %>%
   ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
   geom_point() + theme_bw() + theme(legend.position = "top")
 ggsave(paste0(fig_out,"younger_cousin_F_20.png"), yc_20)
-
+yc_20
 ### Older cousins (Focal at 20)
 oc_cas <- older_cousins_dist(u_mat, f_mat) # Caswell 2019
 oc_20_cas <- oc_cas[1:101,21]
@@ -304,3 +305,80 @@ oc_20 <- rbind(df_joe_OC_20, df_hal_OC_20) %>%
   geom_point() + theme_bw() + theme(legend.position = "top")
 oc_20
 ggsave(paste0(fig_out,"older_cousin_F_20.png"), oc_20)
+
+
+############## Nieces
+
+
+### Younger nieces (Focal at 20)
+nys_cas <- younger_nieces_dist(u_mat, f_mat) # Caswell 2019
+nys_40_cas <- nys_cas[1:101,41]
+df_hal_NYS_40 <- data.frame(age_kin = 0:100,
+                           expectation = nys_40_cas,
+                           method = "Hal")
+df_list_nys_40 <- list() # PMF Kin
+for(i in 0:20){
+  df <- nys_PMF(40, i, u_mat, f_mat, 7)
+  df1 <- data.frame(number = seq(0,6))
+  df1$prob <- df
+  df1$age <- i
+  df_list_nys_40[[(1+length(df_list_nys_40))]] <- df1
+}
+df_list_nys_40 <- do.call("rbind", df_list_nys_40) %>% as.data.frame()
+df_joe_NYS_40 <- df_list_nys_40 %>%
+  dplyr::mutate(X = number*prob,
+                X2 = number^2*prob,
+                X3 = number^3*prob) %>%
+  dplyr::group_by(age) %>%
+  dplyr::summarise(mean = sum(X),
+                   s2 = sum(X2),
+                   s3 = sum(X3),
+                   var = s2 - mean^2,
+                   m3 = s3 + 2*mean^3 - 3*mean*s2,
+                   skew = m3/((var^(0.5))^(3))) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(age_kin = age,
+                   expectation = mean,
+                   method = "PFM")
+### visual
+rbind(df_hal_NYS_40, df_joe_NYS_40) %>%
+  ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
+  geom_point() + theme_bw() + theme(legend.position = "top")
+
+
+### Older nieces (Focal at 20)
+nos_cas <- older_nieces_dist(u_mat, f_mat) # Caswell 2019
+nos_40_cas <- nos_cas[1:101,41]
+df_hal_NOS_40 <- data.frame(age_kin = 0:100,
+                            expectation = nos_40_cas,
+                            method = "Hal")
+df_list_nos_40 <- list() # PMF Kin
+for(i in 0:30){
+  df <- nos_PMF(40, i, u_mat, f_mat, 7)
+  df1 <- data.frame(number = seq(0,6))
+  df1$prob <- df
+  df1$age <- i
+  df_list_nos_40[[(1+length(df_list_nos_40))]] <- df1
+}
+df_list_nos_40 <- do.call("rbind", df_list_nos_40) %>% as.data.frame()
+df_joe_NOS_40 <- df_list_nos_40 %>%
+  dplyr::mutate(X = number*prob,
+                X2 = number^2*prob,
+                X3 = number^3*prob) %>%
+  dplyr::group_by(age) %>%
+  dplyr::summarise(mean = sum(X),
+                   s2 = sum(X2),
+                   s3 = sum(X3),
+                   var = s2 - mean^2,
+                   m3 = s3 + 2*mean^3 - 3*mean*s2,
+                   skew = m3/((var^(0.5))^(3))) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(age_kin = age,
+                   expectation = mean,
+                   method = "PFM")
+### visual
+rbind(df_hal_NOS_40, df_joe_NOS_40) %>%
+  ggplot(aes(x = age_kin, y = expectation, color = method, shape = method)) +
+  geom_point() + theme_bw() + theme(legend.position = "top")
+
+
