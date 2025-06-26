@@ -66,7 +66,7 @@ oa_PMF  <- function(y, s1, U_mat, F_mat, Q){
     }
   }
   matrix_result <- (rho_probs_mat*dist_mat_gran) %*% rep(1, ncol(dist_mat_gran))
-  return(as.vector(matrix_result))
+  return(matrix_result)
 }
 
 
