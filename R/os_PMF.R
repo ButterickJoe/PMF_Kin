@@ -34,19 +34,30 @@ os_PMF_conditional <- function(y, s1, b1, U_mat, F_mat, Q){
 #' @return Vector. PMF for the number-distribution of older sisters of age s1 when Focal is y
 #'
 os_PMF <- function(y, s1, U_mat, F_mat, Q){
-
   if(y >= s1){stop("Older sister has to be strictly older")}
+  age_pdfs <- fert_dists(F_mat, Q) ## mother's fertility pmf given she is alive with prob. 1
+  U_prob <- U_kin_death(0, s1-1 , Q, U_mat) ## surival of older sister from birth to age s1
   probable_ages_of_mothering <- sapply(1:ncol(F_mat), function(x) mothers_age(U_mat, F_mat, x))
   # Actual ages of mothering (non-zero probability)
   actual_ages_of_mothering <- which(probable_ages_of_mothering != 0) - 1
-  matrix_result <- 0
-  for(mothers_age_Focal in actual_ages_of_mothering){
-    mothers_age_OS <- mothers_age_Focal - s1 + y
-    pm <- probable_ages_of_mothering[(1+mothers_age_Focal)]
-    if(mothers_age_OS %in% actual_ages_of_mothering){
-      matrix_result <- matrix_result + pm*os_PMF_conditional(y, s1, mothers_age_Focal, U_mat, F_mat, Q)
+  rho_probs <- probable_ages_of_mothering[(actual_ages_of_mothering+1)]
+  rho_probs_mat <- rep(1, Q) %*% matrix(rho_probs, nrow = 1)
+  b1 <- actual_ages_of_mothering # possible ages of mother at Focal
+  mum_range <- b1 - s1 + y # possible ages of mother at Focal's older sister
+  index_list <- which((y < s1) & (mum_range %in% actual_ages_of_mothering)) ## filter to condition sis > FOcal
+  ## matrix with columns ages of mother repro, and rows her pmf of newborn older sisters
+  dist_mat_mum <- matrix(0, nrow = Q, ncol = length(actual_ages_of_mothering))
+  dist_mat_mum[1, ] <- 1  # so that unless filled the rows are pmfs of zero newborns (no sisters yet!)
+  if (length(index_list) > 0) {
+    for (i in index_list) {
+      age_mum_os <- mum_range[i]
+      os_newborns <- age_pdfs[[(age_mum_os+1)]]
+      dist_mat_mum[, i] <- U_prob %*% os_newborns
     }
-    else{matrix_result <- matrix_result + pm*c(1, rep(0, Q-1))}
   }
-  return(as.vector(matrix_result))
+  matrix_result <- (rho_probs_mat*dist_mat_mum) %*% rep(1, ncol(dist_mat_mum))
+  return(matrix_result)
 }
+
+
+

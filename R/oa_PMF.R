@@ -49,8 +49,8 @@ oa_PMF  <- function(y, s1, U_mat, F_mat, Q){
   rho_probs <- matrix(diag(outer(probable_ages_of_mothering[(combinations$a+1)], probable_ages_of_mothering[(combinations$b+1)], "*")), nrow = 1)
   rho_probs_mat <- rep(1, Q) %*% rho_probs ## gives the bi-variate pmf of mother/grans ages of reproduction
   ### Conditional on each probability from rho_probs_mat we now derive grans reproduction of aunts -- we then multiply these element-wise
-  b1 <- combinations[, 1] # age combs for mother and grandmother
-  b2 <- combinations[, 2]
+  b1 <- combinations[, 1] # age of mother
+  b2 <- combinations[, 2] # age of grandmother
   # age range of gran when having aunt
   age_gran_range <- b1 + b2 - s1 + y
   index_list <- which((b1 + y < s1) & (age_gran_range %in% actual_ages_of_mothering)) ## filter to condition on aunt younger than mom

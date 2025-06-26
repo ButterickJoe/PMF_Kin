@@ -16,13 +16,14 @@ ys_PMF_conditional <- function(y, s1, b1, U_mat, F_mat, Q){
   if(s1 >= y){stop("Younger sister has to be strictly younger")}
   age_mother_ys <- b1 - s1 + y
   mother_vec <- e_vector(2, Q)
-  mother_vec_at_ys <- U_kin_death(b1+1, age_mother_ys-1, Q, U_mat) %*% mother_vec
+  mother_vec_at_ys <- U_kin_death(b1, age_mother_ys-1, Q, U_mat) %*% mother_vec
   Q_mat <- Q_matrix(age_mother_ys, Q, F_mat)
   younger_sis_at_birth <- Q_mat %*% mother_vec_at_ys
   U_prob <- U_kin_death(0, s1-1 , Q, U_mat)
   younger_sis_after_suv <- U_prob %*% younger_sis_at_birth
   return(younger_sis_after_suv)
 }
+
 
 #' Title Unconditional PMF for Younger sisters
 #'
@@ -35,19 +36,30 @@ ys_PMF_conditional <- function(y, s1, b1, U_mat, F_mat, Q){
 #' @return Vector. PMF for the number-distribution of younger sisters of age s1 when Focal is y
 #'
 ys_PMF  <- function(y, s1, U_mat, F_mat, Q){
-
   if(y <= s1){stop("Younger sister has to be strictly younger")}
+  mother_vec <- e_vector(2, Q)
+  U_prob <- U_kin_death(0, s1-1 , Q, U_mat)
   probable_ages_of_mothering <- sapply(1:ncol(F_mat), function(x) mothers_age(U_mat, F_mat, x))
   # Actual ages of mothering (non-zero probability)
   actual_ages_of_mothering <- which(probable_ages_of_mothering != 0) - 1
-  matrix_result <- 0 ## normaliser etst
-  for(mothers_age_Focal in actual_ages_of_mothering){
-    mothers_age_YS <- mothers_age_Focal - s1 + y
-    pm <- probable_ages_of_mothering[(mothers_age_Focal+1)]
-    if(mothers_age_YS %in% actual_ages_of_mothering){
-      matrix_result <- matrix_result + pm*ys_PMF_conditional(y, s1, mothers_age_Focal, U_mat, F_mat, Q)
+  rho_probs <- probable_ages_of_mothering[(actual_ages_of_mothering+1)]
+  rho_probs_mat <- rep(1, Q) %*% matrix(rho_probs, nrow = 1)
+  b1 <- actual_ages_of_mothering # possible ages of mother at Focal
+  mum_range <- b1 - s1 + y # possible ages of mother at Focal's younger sister
+  index_list <- which((y > s1) & (mum_range %in% actual_ages_of_mothering)) ## filter to condition sis < FOcal
+  ## matrix with columns ages of mother repro, and rows her pmf of newborn younger sisters
+  dist_mat_mum <- matrix(0, nrow = Q, ncol = length(actual_ages_of_mothering))
+  dist_mat_mum[1, ] <- 1  # so that unless filled the rows are pmfs of zero newborns (no sisters yet!)
+  if (length(index_list) > 0) {
+    for (i in index_list) {
+      age_mum_ys <- mum_range[i]
+      mother_pmf_at_ys <- U_kin_death(b1[i], age_mum_ys-1, Q, U_mat) %*% mother_vec
+      Q_mat <- Q_matrix(age_mum_ys, Q, F_mat)
+      ys_newborns <- Q_mat %*% mother_pmf_at_ys
+      dist_mat_mum[, i] <- U_prob %*% ys_newborns
     }
-    else{matrix_result <- matrix_result + pm*c(1, rep(0, Q-1))}
   }
-  return(as.vector(matrix_result))
+  matrix_result <- (rho_probs_mat*dist_mat_mum) %*% rep(1, ncol(dist_mat_mum))
+  return(matrix_result)
 }
+
