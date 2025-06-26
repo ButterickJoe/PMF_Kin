@@ -22,16 +22,15 @@ coa_PMF <- function(y, s2, U_mat, F_mat, Q){
   rho_probs <- matrix(diag(outer(probable_ages_of_mothering[(combinations$a+1)], probable_ages_of_mothering[(combinations$b+1)], "*")), nrow = 1)
   rho_probs_mat <- rep(1, Q) %*% rho_probs
 
-  # Main computation:
+  # list of potential youger cousins -- the convolution of which is the result:
   result_list <- lapply(actual_ages_of_mothering, function(OA_age_COA) {
-    b1 <- combinations[, 1] # age combs for mother and grandmother
-    b2 <- combinations[, 2]
-    # age of gran when having aunt
-    gran_age <- b1 + b2 - (OA_age_COA + s2) + y
-    index_list <- which((b1 + y < (OA_age_COA + s2)) & (gran_age %in% actual_ages_of_mothering)) ## index_list = indices representing ages at which gran can have aunt, such that aunt is younger then mother
+    b1 <- combinations[, 1] # age of mother when she had Focal
+    b2 <- combinations[, 2] # age of gran when she had mother
+    gran_age <- b1 + b2 - (OA_age_COA + s2) + y # age of gran when having aunt
+    index_list <- which((b1 + y < (OA_age_COA + s2)) & (gran_age %in% actual_ages_of_mothering)) ## ages of gran at which she can have aunt, such that aunt is older then mother
     # Conditional reproductive pmfs of gran (for element-wise product through resp. probs in "rho_probs_mat")
     dist_mat_gran <- matrix(0, nrow = Q, ncol = nrow(combinations))
-    dist_mat_gran[1, ] <- 1  #
+    dist_mat_gran[1, ] <- 1  # no reproduction unless conditions met and we move below
     # If condition_T is met
     if (length(index_list) > 0) {
       U_prob_aunt <- U_kin_death(0, OA_age_COA - 1, Q, U_mat) # prob gran survives from having mother, up to age when she has aunt
