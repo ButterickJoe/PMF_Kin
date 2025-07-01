@@ -1,0 +1,253 @@
+---
+title: "Examples of the younger lineage formaul: Eq X in text"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignettes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+# Set up code chunk options
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE, 
+                      warning = FALSE, 
+                      fig.align = 'center',
+                      fig.width = 8,
+                      fig.height = 6,
+                      dpi = 300)
+# Prevent scientific notation (useful for the rate calculation)
+options(scipen = 999999)
+pkgload::load_all()
+```
+### Load in all libraries used for data maipulation and plotting
+Load the libary and other libraries
+
+```{r installs, eval=FALSE}
+# Install basic data analysis packages
+#rm(list = ls())
+#install.packages("dplyr")     # Data manipulation
+#install.packages("tidyr")     # Data tidying
+#install.packages("ggplot2")   # Data visualization
+#install.packages("knitr")     # Document generation
+library(dplyr)    # For data manipulation
+library(tidyr)    # For restructuring data
+library(ggplot2)  # For visualization
+library(knitr)    # For document generation
+# Install the package
+library(Branchingdemres)  # For kinship analysis
+```
+
+### Import demographic rates
+Lets import the period based static demographic rates, in the form of a Leslie matrix: A = U + F.
+
+```{r setup, message=FALSE, warning=FALSE}
+U_matrix <- readr::read_rds(here::here("data","u_mat.Rds"))
+F_matrix <- readr::read_rds(here::here("data","f_mat.Rds"))
+```
+
+### Aunts younger than Focal's mother; age-specific pmfs
+
+Let's investigate Focal's younger aunts. Suppose that Focal is a newborn. We want to know the probabilities that she has zero, one, two, three, four, up to a maximum of eight aunts who are younger than her mother, and of exact age 20. The function call
+
+```{r calculate PMF for Focal's older sisters of age 11 when Focal is aged 10, message=FALSE, warning=FALSE}
+pmf_foc_0_ya_20 <- ya_PMF(y = 0, s1 = 20, U_mat = U_matrix, F_mat = F_matrix, Q = 9)
+sum(pmf_foc_0_ya_20)
+df_foc_0_ya_20 <- data.frame(number = seq(0,8),
+                              prob = pmf_foc_0_ya_20,
+                              kin = "Older sisters",
+                              kin_age = 11,
+                              focal_age = "Focal 10 years")
+ggplot(df_foc_0_ya_20, aes(x = number, y = prob)) +
+  geom_bar(position = "dodge", stat = "identity")  + facet_wrap(~focal_age) +
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8)) +
+  theme(legend.position = "top") + 
+  ggtitle("The probabilities that newborn Focal has exactly 0,1...,8 younger aunts aged 20")
+
+```
+
+
+Consider all of the possible ages that Focal's older sister could be. In this case, from 11 years old to 11 + max(mother_reproductive_age). For each possible age of older sisters, we have a probability distribution representing the likeliness that Focal has 0,1,2,... of the kin. Below we take the first three central moments from these age-specific PMFs and plot them
+
+```{r calculate statistics from the PMFs for Focal's younger aunts, when Focal is aged 0, message=FALSE, warning=FALSE}
+pmf_foc_0_ya_full <- data.frame()
+for(ya_age in 0:50){
+  temp_df <- data.frame(number = seq(0,8),
+                        prob = ya_PMF(y = 0, s1 = ya_age, U_mat = U_matrix, F_mat = F_matrix, Q = 9))
+  temp_df$age <- rep(ya_age, 9)
+  pmf_foc_0_ya_full <- rbind(pmf_foc_0_ya_full, temp_df)
+}
+
+age_specific_pmfs_ya_foc_0 <- pmf_foc_0_ya_full %>%
+  group_by(age) %>%
+    summarise(X = prob*number,
+              X2 = prob*number^2,
+              X3 = prob*number^3) %>%
+  ungroup() %>% 
+  group_by(age) %>%
+  summarise(mean = sum(X),
+            var = sum(X2) - mean^2,
+            m3 = sum(X3) + 2*mean^3 - 3*mean*sum(X2),
+            skew = m3/((var^(0.5))^(3))) %>%
+  ungroup() %>% mutate(Age_focal = "Focal 0 years old")
+
+legend_title_a <- "Age of Focal"
+scale_skew <- 300
+
+age_specific_pmfs_ya_foc_0 %>%
+  ggplot(aes(x = age)) + 
+  geom_point(aes( y = mean), color = "blue") + 
+  geom_line(aes(y = var^(0.5)), color = "red") +
+  geom_line(data = age_specific_pmfs_ya_foc_0 %>% dplyr::filter(skew < 90), aes(y = skew/scale_skew), 
+            linetype = "solid", size = 0.75, color = "grey") +
+  scale_y_continuous(sec.axis = sec_axis(~.*scale_skew, name = "Skew (grey)"))+
+  ylab("Mean (blue), sd (red)") +
+  xlab("Age of younger aunt") + ggtitle("Focal at age 0")
+
+```
+
+
+
+Of course, we can look at how these values change as we condiser different ages of Focal, say at age 50.
+
+```{r calculate statistics from the PMFs for Focal's younger aunts, when Focal is aged 50, message=FALSE, warning=FALSE}
+pmf_foc_50_ya_full <- data.frame()
+for(ya_age in 50:90){
+  temp_df <- data.frame(number = seq(0,8),
+                        prob = ya_PMF(y = 50, s1 = ya_age, U_mat = U_matrix, F_mat = F_matrix, Q = 9))
+  temp_df$age <- rep(ya_age, 9)
+  pmf_foc_50_ya_full <- rbind(pmf_foc_50_ya_full, temp_df)
+}
+
+age_specific_pmfs_ya_foc_50 <- pmf_foc_50_ya_full %>%
+  group_by(age) %>%
+    summarise(X = prob*number,
+              X2 = prob*number^2,
+              X3 = prob*number^3) %>%
+  ungroup() %>% 
+  group_by(age) %>%
+  summarise(mean = sum(X),
+            var = sum(X2) - mean^2,
+            m3 = sum(X3) + 2*mean^3 - 3*mean*sum(X2),
+            skew = m3/((var^(0.5))^(3))) %>%
+  ungroup() %>% mutate(Age_focal = "Focal 50 years old")
+
+legend_title_a <- "Age of Focal"
+scale_skew <- 300
+
+rbind(age_specific_pmfs_ya_foc_0 ,
+      age_specific_pmfs_ya_foc_50 )%>%
+  ggplot(aes(x = age)) + facet_wrap(~Age_focal, scales = "free_x") +
+  geom_point(aes( y = mean), color = "blue") + 
+  geom_line(aes(y = var^(0.5)), color = "red") +
+  geom_line(data = rbind(age_specific_pmfs_ya_foc_0 %>% dplyr::filter(skew < 90), 
+                         age_specific_pmfs_ya_foc_50 %>% dplyr::filter(skew < 90)),
+            aes(y = skew/scale_skew), 
+            linetype = "solid", size = 0.75, color = "grey") +
+  scale_y_continuous(sec.axis = sec_axis(~.*scale_skew, name = "Skew (grey)"))+
+  ylab("Mean (blue), sd (red)") +
+  xlab("Age of older sister") 
+
+```
+
+### Yonger aunts; the total pmf
+
+The total probabilities of younger aunts (i.e., irrespective of their age) is given by the convolution of the age-specific pmfs. Here we compare the total pmfs for Focal at age 10 and age 60
+(see Theorem 1 in the MS)
+```{r Compare pmf of total to age-specific pmf, message=FALSE, warning=FALSE}
+list_to_convolve_f0 <- list()
+for(ya_age in 0:50){
+  temp <- pmf_foc_0_ya_full %>% filter(age == ya_age)
+  temp <- temp$prob
+  list_to_convolve_f0[[(1+length(list_to_convolve_f0))]] <- list("prob" = temp, "age_ya" = ya_age)
+}
+
+t_prob_0 <- convoluion_nth(length(list_to_convolve_f0), lapply(1:length(list_to_convolve_f0), function(x){list_to_convolve_f0[[x]][["prob"]]}))
+
+pmd_ya_foc_0_totals <- data.frame(number = seq(0,8),
+                                   prob = t_prob_0,
+                                   kin = "Younger aunts",
+                                   kin_age = "all possible",
+                                   focal_age = "Focal 0 years")
+
+### Compare total 
+pmd_ya_foc_0_totals %>%
+  ggplot(aes(x = number, y = prob)) + geom_bar(position = "dodge", stat = "identity") +
+  scale_x_continuous(breaks = c(0,1,2,3,4,5,6,7,8)) +
+  theme(legend.position = "top") + 
+  ggtitle("Probable number of younger aunts, when Focal born")
+
+```
+### As a final exploration, let's look at the probable numbers of Focal's younger aunts, by each age of Focal
+
+````{r The probable numbers of older sisters over Focal's life course}
+############### Younger aunts over Focal's life ##################
+f_int <- which(mothers_age(U_matrix, F_matrix) > 0)%>%length()
+ya_df <- lapply(0:100, function(focal_age) {
+  ya_age <- focal_age + seq_len(f_int)
+  ya_age <- ya_age[which(ya_age<=100)]
+  if(length(ya_age)>0){
+    clist <- mapply(function(y) {
+      ya_PMF(focal_age, y, U_mat = U_matrix, F_mat = F_matrix, Q = 9)
+    }, ya_age, SIMPLIFY = FALSE)
+    prob <- convoluion_nth(length(clist), clist)
+    return(list("age focal" = focal_age, "prob aunt" = prob))}
+  else{return(list("age focal" = focal_age, "prob aunt" = as.matrix(c(1, rep(0, 8)))))}
+  
+})
+
+ya_df <- do.call("rbind" , lapply(1:length(ya_df), function(x){ data.frame(number = seq(0,8),
+                                                  prob = ya_df[[x]][["prob aunt"]],
+                                                  age_focal = ya_df[[x]][["age focal"]]) }))
+## check sum to one
+ya_df %>% dplyr::group_by(age_focal) %>%
+  dplyr::summarise(check = sum(prob)) %>%
+  dplyr::ungroup()
+
+ya_df$X <- ya_df$number*ya_df$prob
+ya_df$X2 <- ya_df$number^2*ya_df$prob
+ya_df$X3 <- ya_df$number^3*ya_df$prob
+ya_df_final <- ya_df %>%
+  dplyr::group_by(age_focal) %>%
+  dplyr::summarise(expectation = sum(X),
+                   s2 = sum(X2),
+                   variance = s2 - expectation^2,
+                   s3 = sum(X3),
+                   m3 = s3 + 2*expectation^3 - 3*expectation*s2,
+                   skew = m3/((variance^(0.5))^(3)),
+                   cum_p = cumsum(prob),
+                   number = number,
+                   prob = prob) %>%
+  dplyr::ungroup() %>%
+  dplyr::transmute(age_Focal = age_focal,
+                   expectation = expectation,
+                   variance = variance,
+                   skew = skew,
+                   kin = "Younger aunts",
+                   method = "PMF model",
+                   inv_cum_p_95 = ifelse(cum_p >= 0.95 , number, 20 ),
+                   inv_cum_p_05 = ifelse(cum_p >= 0.05 , number, 20 ),
+                   number = number,
+                   prob = prob) %>%
+  group_by(age_Focal) %>%
+  summarise(number_q95 = min(inv_cum_p_95),
+            number_q05 = min(inv_cum_p_05),
+            age_Focal = age_Focal,
+            expectation = expectation,
+            variance = variance,
+            skew = skew,
+            number = number,
+            prob = prob,
+            kin = "Younger aunts",
+            method = "PMF model")
+
+ya_df_final %>%
+  ggplot(aes(x = age_Focal, y = prob, color = factor(number))) +
+  geom_line(aes(group = factor(number))) +
+  theme(legend.position = "top") +
+  labs(color = "Number of younger aunts",
+       y = "Probability",
+       x = "Age of Focal"
+  )
+
+````
