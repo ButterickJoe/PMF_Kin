@@ -1,0 +1,47 @@
+---
+title: "Examples of the older lineage formaul: Eq X in text"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignettes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Load the libary and other libraries
+
+```{r setup}
+library(Branchingdemres)
+load_all()
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+Lets import the period based static demographic rates, in the form of a Leslie matrix: A = U + F.
+
+```{r setup}
+U_matrix <- readr::read_rds(here::here("data","u_mat.Rds"))
+F_matrix <- readr::read_rds(here::here("data","f_mat.Rds"))
+```
+
+Let's investigate Focal's older sisters. Suppose that Focal is 10 years old. We want to know the probabilities that she has 
+zero, one, two, three, four, up to a maximum of eight older sisters of exact age 11. The function call
+
+```{r setup}
+pmf_foc_10_os_11 <- os_PMF(y = 10, s1 = 11, U_mat = U_matrix, F_mat = F_matrix, Q = 9)
+sum(pmf_foc_10_os_11)
+df_foc_10_os_11 <- data.frame(number = seq(0,8),
+                              prob = pmf_foc_10_os_11,
+                              kin = "Older sisters",
+                              kin_age = 11,
+                              focal_age = 10)
+ggplot(df_foc_10_os_11, aes(x = number, y = prob)) +
+  geom_bar(position = "dodge", stat = "identity")  
+```

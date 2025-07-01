@@ -15,11 +15,7 @@ acc_ys_list <- list()
 for(age_focal in 1:99){
   ys_conv <- list()
   for(age_ys in max(0,age_focal-f_int-1):(age_focal-1)){
-    ## Notice the time differences in function choice
-    #YS <- unconditional_mothers_age_YS(age_focal, age_ys, u_mat, f_mat, 7)
-    #YS <- YS$prob
-    ## Matrix model faster
-    YS <- Matrix_func_age_YS(age_focal, age_ys, u_mat, f_mat, 7) ## note both give same results
+    YS <- ys_PMF(age_focal, age_ys, u_mat, f_mat, 7) ## note both give same results
     ys_conv[[(1+length(ys_conv))]] <- YS
   }
   #pp <- convoluion_nth(length(ys_conv), ys_conv)
@@ -41,9 +37,7 @@ acc_os_list <- list()
 for(age_focal in 0:99){
   os_conv <- list()
   for(age_os in (age_focal+1):min(100,age_focal+f_int+1) ){
-    #OS <- unconditional_mothers_age_OS(age_focal, age_os, u_mat, f_mat, 7)
-    #OS <- OS$prob
-    OS <- Matrix_func_age_OS(age_focal, age_os, u_mat, f_mat, 7)
+    OS <- os_PMF(age_focal, age_os, u_mat, f_mat, 7)
     os_conv[[(1+length(os_conv))]] <- OS
   }
   pp <- fourier_fft_nth(length(os_conv), os_conv)
